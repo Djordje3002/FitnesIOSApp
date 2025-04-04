@@ -3,7 +3,10 @@ import Charts
 
 
 
-class HealthManagerNew: ObservableObject {
+import SwiftUI
+import Charts
+
+class ChartsMenager: ObservableObject {
     @Published var mockWeekChartData: [DailyStepModel] = []
     @Published var mockChartDataMonth: [DailyStepModel] = []
     @Published var mockChartDataThreeMonths: [MonthlyStepModel] = []
@@ -92,4 +95,5 @@ class HealthManagerNew: ObservableObject {
         oneYearAverage = oneYearTotal / max(mockChartDataOneYear.count, 1)
     }
 }
+
 

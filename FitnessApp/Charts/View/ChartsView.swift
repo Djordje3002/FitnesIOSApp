@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 
 struct ChartsView: View {
-    @StateObject var healthManager = HealthManagerNew()
+    @StateObject var healthManager = ChartsMenager()
     @State var selectedChart: ChartOptions = .oneWeek
     
     var body: some View {
