@@ -4,7 +4,7 @@ class HomeViewModel: ObservableObject {
     
 //    let healthManager = HealthManagerNew()
     
-    @Published var calories: Int = 123
+    @Published var calories: Int = 100
     @Published var active: Int = 55
     @Published var stand: Int = 320
     
