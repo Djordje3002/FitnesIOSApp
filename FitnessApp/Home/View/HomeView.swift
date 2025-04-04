@@ -15,7 +15,7 @@ struct HomeView: View {
         NavigationStack {
             ScrollView(showsIndicators: false){
                 VStack(alignment: .leading){
-                    Text("Desi be")
+                    Text("Welcome bro")
                         .font(.largeTitle)
                         .padding()
                     
