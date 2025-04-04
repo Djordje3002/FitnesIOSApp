@@ -39,7 +39,7 @@ struct HomeView: View {
                                     .font(.callout)
                                     .bold()
                                     .foregroundColor(.blue)
-                                Text("\(viewModel.stand) hr") // Fixed to use 'stand' instead of 'active'
+                                Text("\(viewModel.stand) hr")
                                     .bold()
                             }
                             .padding()
@@ -50,10 +50,10 @@ struct HomeView: View {
                             ProgressCircleView(progress: $viewModel.calories, color: .red, goal: 600)
                             ProgressCircleView(progress: $viewModel.active, color: .green, goal: 60)
                                 .padding(.all, 20)
-                            ProgressCircleView(progress: $viewModel.stand, color: .blue, goal: 12) // Adjusted goal to 12 for stand hours
+                            ProgressCircleView(progress: $viewModel.stand, color: .blue, goal: 12)
                                 .padding(.all, 40)
                         }
-                        .frame(width: 150, height: 150) // Fixed size for better layout
+                        .frame(width: 150, height: 150)
                         Spacer()
                     }
                     .padding()
@@ -75,18 +75,18 @@ struct HomeView: View {
                     .padding()
                     
                     LazyVGrid(columns: Array(repeating: GridItem(spacing: 20), count: 2)) {
-                        ForEach(viewModel.mockActivities, id: \.id) { activity in
+                        ForEach(viewModel.activities, id: \.id) { activity in
                             ActivityCard(activity: activity)
                         }
                     }
                     .padding(.horizontal)
                     
                     HStack {
-                        Text("Recent Workout")
+                        Text("Recent Workouts")
                             .font(.title2)
                         Spacer()
                         NavigationLink {
-                            EmptyView() // Placeholder for future detail view
+                            EmptyView()
                         } label: {
                             Text("Show more")
                                 .padding(.all, 10)
@@ -99,7 +99,7 @@ struct HomeView: View {
                     .padding(.top)
                     
                     LazyVStack {
-                        ForEach(viewModel.mockWorkouts, id: \.id) { workout in
+                        ForEach(viewModel.workouts, id: \.id) { workout in
                             WorkoutCard(workout: workout)
                         }
                     }

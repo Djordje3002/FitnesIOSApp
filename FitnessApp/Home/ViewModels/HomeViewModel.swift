@@ -6,34 +6,30 @@ class HomeViewModel: ObservableObject {
     @Published var calories: Int = 0
     @Published var active: Int = 0
     @Published var stand: Int = 0
+    @Published var steps: Int = 0
+    @Published var distance: Double = 0.0
     
-    @Published var mockActivities = [
-        Activity(id: 0, title: "Number", subtitle: "Steps taken", image: "figure.walk", titntColor: .green, amount: "12,432"),
-        Activity(id: 1, title: "Calories", subtitle: "Calories burned", image: "flame", titntColor: .red, amount: "9876"),
-        Activity(id: 2, title: "Distance", subtitle: "Distance covered", image: "map", titntColor: .blue, amount: "5.2 km"),
-        Activity(id: 3, title: "Steps", subtitle: "Total steps", image: "figure.walk", titntColor: .orange, amount: "10,212")
-    ]
-    
-    @Published var mockWorkouts = [
-        Workout(id: 0, title: "Running", image: "figure.run", tintcolor: .red, duration: "31 min", date: "March 20", calories: "360 kcal"),
-        Workout(id: 1, title: "Cycling", image: "bicycle", tintcolor: .blue, duration: "45 min", date: "March 22", calories: "500 kcal"),
-        Workout(id: 2, title: "Swimming", image: "figure.pool.swim", tintcolor: .green, duration: "25 min", date: "March 25", calories: "320 kcal"),
-        Workout(id: 3, title: "Yoga", image: "figure.yoga", tintcolor: .purple, duration: "60 min", date: "March 27", calories: "150 kcal"),
-        Workout(id: 4, title: "Strength Training", image: "dumbbell", tintcolor: .orange, duration: "50 min", date: "March 28", calories: "420 kcal")
-    ]
+    @Published var activities: [Activity] = []
+    @Published var workouts: [Workout] = []
     
     init() {
         Task {
             do {
                 try await healthManager.requestHealthKitAccess()
-                // Fetch data after authorization
-                self.fetchTodayCalories()
-                self.fetchTodayExerciseTime()
-                self.fetchTodayStandHours()
+                fetchAllData()
             } catch {
                 print("HealthKit access failed: \(error.localizedDescription)")
             }
         }
+    }
+    
+    func fetchAllData() {
+        fetchTodayCalories()
+        fetchTodayExerciseTime()
+        fetchTodayStandHours()
+        fetchTodaySteps()
+        fetchTodayDistance()
+        fetchRecentWorkouts()
     }
     
     func fetchTodayCalories() {
@@ -41,10 +37,11 @@ class HomeViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let value):
-                    self.calories = Int(value) // Integer value, e.g., 123
+                    self.calories = Int(value)
+                    self.updateActivities()
                     print("Calories: \(value)")
                 case .failure(let error):
-                    self.calories = 0 // Fallback integer value
+                    self.calories = 0
                     print("Calories error: \(error.localizedDescription)")
                 }
             }
@@ -56,10 +53,10 @@ class HomeViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let value):
-                    self.active = Int(value) // Integer value, e.g., 45
+                    self.active = Int(value)
                     print("Exercise time: \(value)")
                 case .failure(let error):
-                    self.active = 0 // Fallback integer value
+                    self.active = 0
                     print("Exercise error: \(error.localizedDescription)")
                 }
             }
@@ -71,13 +68,81 @@ class HomeViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let value):
-                    self.stand = value // Direct Int assignment, e.g., 5
+                    self.stand = value
                     print("Stand hours: \(value)")
                 case .failure(let error):
-                    self.stand = 0 // Fallback integer value
+                    self.stand = 0
                     print("Stand hours error: \(error.localizedDescription)")
                 }
             }
         }
     }
+    
+    func fetchTodaySteps() {
+        healthManager.fetchTodaySteps { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let value):
+                    self.steps = value
+                    self.updateActivities()
+                    print("Steps: \(value)")
+                case .failure(let error):
+                    self.steps = 0
+                    print("Steps error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func fetchTodayDistance() {
+        healthManager.fetchTodayDistance { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let value):
+                    self.distance = value
+                    self.updateActivities()
+                    print("Distance: \(value) km")
+                case .failure(let error):
+                    self.distance = 0
+                    print("Distance error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func fetchRecentWorkouts() {
+        healthManager.fetchRecentWorkouts { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let hkWorkouts):
+                    self.workouts = hkWorkouts.enumerated().map { (index, workout) in
+                        let title = workout.workoutActivityType.name
+                        let image = workout.workoutActivityType.icon
+                        let tintColor = workout.workoutActivityType.color
+                        let duration = Int(workout.duration / 60) // Convert seconds to minutes
+                        let date = DateFormatter.localizedString(from: workout.startDate, dateStyle: .medium, timeStyle: .none)
+                        let calories = Int(workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0)
+                        return Workout(id: index, title: title, image: image, tintcolor: tintColor, duration: "\(duration) min", date: date, calories: "\(calories) kcal")
+                    }
+                    print("Workouts fetched: \(self.workouts.count)")
+                case .failure(let error):
+                    self.workouts = []
+                    print("Workouts error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func updateActivities() {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = ","
+        
+        activities = [
+            Activity(id: 0, title: "Steps", subtitle: "Steps taken", image: "figure.walk", titntColor: .green, amount: formatter.string(from: NSNumber(value: steps)) ?? "0"),
+            Activity(id: 1, title: "Calories", subtitle: "Calories burned", image: "flame", titntColor: .red, amount: "\(calories) kcal"),
+            Activity(id: 2, title: "Distance", subtitle: "Distance covered", image: "map", titntColor: .blue, amount: String(format: "%.1f km", distance))
+        ]
+    }
 }
+
