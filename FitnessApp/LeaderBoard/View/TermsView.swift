@@ -8,7 +8,7 @@ struct TermsView: View {
     @State var acceptedTerms = false
     
     var body: some View {
-        VStack{
+        VStack {
             Text("Leaderboards")
                 .font(.largeTitle)
                 .bold()
@@ -18,46 +18,48 @@ struct TermsView: View {
             TextField("Username", text: $name)
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke()
+                    RoundedRectangle(cornerRadius: 10).stroke()
                 )
             
-            HStack(alignment: .top){
-                
+            HStack(alignment: .top) {
                 Button {
-                    withAnimation{
+                    withAnimation {
                         acceptedTerms.toggle()
                     }
                 } label: {
-                    if acceptedTerms {
-                        Image(systemName: "square.inset.filled")
-                    }else{
-                        Image(systemName: "square")
-                    }
+                    Image(systemName: acceptedTerms ? "checkmark.square.fill" : "square")
                 }
                 
                 Text("By checking you agree to the terms and enter into the leaderboard competition")
             }
+            
             Spacer()
+            
             Button {
-                if acceptedTerms && name.count > 2{
+                if acceptedTerms && name.count > 2 {
                     username = name
-                    dismiss()
+                    Task {
+                        do {
+                            try await DatabaseManager.shared.postUserToLeaderboard(userID: name, stepCount: 0)
+                            dismiss()
+                        } catch {
+                            print("Error saving to leaderboard: \(error.localizedDescription)")
+                        }
+                    }
                 }
             } label: {
                 Text("Continue")
                     .foregroundColor(.white)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                    )
+                    .background(RoundedRectangle(cornerRadius: 10))
             }
-
-        }.padding()
+        }
+        .padding()
     }
 }
 
 #Preview {
     TermsView()
 }
+

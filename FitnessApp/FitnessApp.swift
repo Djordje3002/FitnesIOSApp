@@ -1,10 +1,3 @@
-//
-//  FitnessAppApp.swift
-//  FitnessApp
-//
-//  Created by Djordje Mitrovic on 27.3.25..
-//
-
 import SwiftUI
 import FirebaseCore
 

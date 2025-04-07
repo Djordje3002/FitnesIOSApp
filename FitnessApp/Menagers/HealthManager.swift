@@ -127,4 +127,13 @@ class HealthManager {
         }
         healthStore.execute(query)
     }
+    
+    func fetchTodayStepsAsync() async throws -> Int {
+        try await withCheckedThrowingContinuation { continuation in
+            fetchTodaySteps { result in
+                continuation.resume(with: result)
+            }
+        }
+    }
+
 }

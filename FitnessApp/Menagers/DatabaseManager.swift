@@ -1,33 +1,29 @@
-//
-//  DatabaseManager.swift
-//  FitnessApp
-//
-//  Created by Djordje Mitrovic on 3.4.25..
-//
-
 import Foundation
 import FirebaseFirestore
 
-
-class DatabaseManager{
+class DatabaseManager {
     
     static let shared = DatabaseManager()
     
-    private init(){}
+    private init() {}
     
     let database = Firestore.firestore()
     
-    //Fetch leaderboards
-    func fetchLaederboards() async throws{
+    // Fetch leaderboards
+    func fetchLeaderboardData() async throws -> [LeaderBoardUser] {
         let snapshot = try await database.collection("-leaderboard").getDocuments()
-        
-        print(snapshot.documents)
-        print(snapshot.documents.first?.data())
+        return snapshot.documents.compactMap { doc in
+            let data = doc.data()
+            guard let stepCount = data["stepCount"] as? Int else { return nil }
+            return LeaderBoardUser(id: doc.documentID.hashValue, username: doc.documentID, count: stepCount)
+        }.sorted(by: { $0.count > $1.count })
     }
     
-    //Post leaderboards update
-    func postStepCountUpdateFor(userID: String, stepCount: Int) async throws{
-        try await database.collection("-leaderboard").document(userID).setData(["stepCount": stepCount])
+    // Save or update leaderboard step count
+    func postUserToLeaderboard(userID: String, stepCount: Int) async throws {
+        try await database.collection("-leaderboard").document(userID).setData([
+            "stepCount": stepCount
+        ])
     }
-    
 }
+

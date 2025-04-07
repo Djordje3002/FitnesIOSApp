@@ -1,69 +1,30 @@
-//
-//  LeaderBoardView.swift
-//  FitnessApp
-//
-//  Created by Djordje Mitrovic on 27.3.25..
-//
-
 import SwiftUI
-
-struct LeaderBoardUser: Codable, Identifiable{
-    let id: Int
-    let username: String
-    let count: Int
-}
-
-class LeaderBoardViewModel: ObservableObject{
-    
-    var mockData = [
-        LeaderBoardUser(id: 0, username: "maihajlo", count: 1234),
-        LeaderBoardUser(id: 1, username: "jovan", count: 345),
-        LeaderBoardUser(id: 2,  username: "milos", count: 234567),
-        LeaderBoardUser(id: 3,  username: "mirko", count: 113),
-        LeaderBoardUser(id: 4,  username: "milan", count: 234),
-        LeaderBoardUser(id: 5,  username: "biljana", count: 8),
-        LeaderBoardUser(id: 6,  username: "maihajlo", count: 1234),
-        LeaderBoardUser(id: 7,  username: "jovan", count: 345),
-        LeaderBoardUser(id: 8,  username: "milos", count: 234567),
-        LeaderBoardUser(id: 9,  username: "mirko", count: 113),
-        LeaderBoardUser(id: 10,  username: "milan", count: 234),
-        LeaderBoardUser(id: 11, username: "biljana", count: 8)
-    ]
-    
-}
 
 struct LeaderBoardView: View {
     
     @StateObject var viewModel = LeaderBoardViewModel()
-    
-    @State var showTerms = true
+    @State var showTerms = false
     
     var body: some View {
-        VStack{
+        VStack {
             Text("Leaderboards")
                 .font(.largeTitle)
                 .bold()
             
-            HStack{
+            HStack {
                 Text("Name")
                     .bold()
-                
                 Spacer()
-                
                 Text("Steps")
                     .bold()
             }
             .padding()
             
-            LazyVStack(spacing: 16){
-                ForEach(viewModel.mockData){ person in
-                    HStack{
-                        Text("\(person.id)")
-                        
+            LazyVStack(spacing: 16) {
+                ForEach(viewModel.mockData) { person in
+                    HStack {
                         Text(person.username)
-                        
                         Spacer()
-                        
                         Text("\(person.count)")
                     }
                     .padding(.horizontal)
@@ -75,16 +36,21 @@ struct LeaderBoardView: View {
         .fullScreenCover(isPresented: $showTerms) {
             TermsView()
         }
-        .task{
-            do{
-                try await DatabaseManager.shared.fetchLaederboards()
-            }catch{
-                print(error.localizedDescription)
+        .task {
+            do {
+                guard let name = UserDefaults.standard.string(forKey: "username") else {
+                    showTerms = true
+                    return
+                }
+                let steps = try await HealthManager.shared.fetchTodayStepsAsync()
+                try await DatabaseManager.shared.postUserToLeaderboard(userID: name, stepCount: steps)
+                try await viewModel.fetchLeaderboardData()
+            } catch {
+                print("Error: \(error.localizedDescription)")
             }
         }
     }
 }
-
 #Preview {
     LeaderBoardView()
 }
